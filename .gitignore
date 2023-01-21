@@ -155,4 +155,6 @@ cython_debug/
 # performance profiling debugs
 profile*.txt
 
+audio2midi.exe
 ffmpeg.exe
+output/

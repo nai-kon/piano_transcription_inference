@@ -40,7 +40,7 @@ class PianoTranscription(object):
             classes_num=self.classes_num)
 
         # Load model
-        checkpoint_path=r"model_file\note_F1=0.9677_pedal_F1=0.9186.pth"
+        checkpoint_path=r"model_file\CRNN_note_F1=0.9677_pedal_F1=0.9186.pth"
         checkpoint = torch.load(checkpoint_path, map_location=device)
         self.model.load_state_dict(checkpoint['model'], strict=False)
 
