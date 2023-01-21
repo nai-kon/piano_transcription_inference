@@ -24,7 +24,7 @@ def append_to_dict(dict, key, value):
         dict[key] = [value]
  
 
-def forward(model, x, batch_size):
+def forward(model, x, batch_size, pbar):
     """Forward data to model in mini-batch. 
     
     Args: 
@@ -45,20 +45,27 @@ def forward(model, x, batch_size):
     pointer = 0
     total_segments = int(np.ceil(len(x) / batch_size))
     
-    while True:
-        print('Segment {} / {}'.format(pointer, total_segments))
-        if pointer >= len(x):
-            break
 
-        batch_waveform = move_data_to_device(x[pointer : pointer + batch_size], device)
-        pointer += batch_size
+    try:
+        while True:
+            print('Segment {} / {}'.format(pointer, total_segments))
 
-        with torch.no_grad():
-            model.eval()
-            batch_output_dict = model(batch_waveform)
+            pbar.set(100 * pointer//total_segments)
 
-        for key in batch_output_dict.keys():
-            append_to_dict(output_dict, key, batch_output_dict[key].data.cpu().numpy())
+            if pointer >= len(x):
+                break
+
+            batch_waveform = move_data_to_device(x[pointer : pointer + batch_size], device)
+            pointer += batch_size
+
+            with torch.no_grad():
+                model.eval()
+                batch_output_dict = model(batch_waveform)
+
+            for key in batch_output_dict.keys():
+                append_to_dict(output_dict, key, batch_output_dict[key].data.cpu().numpy())
+    except Exception:
+        exit(0)
 
     for key in output_dict.keys():
         output_dict[key] = np.concatenate(output_dict[key], axis=0)

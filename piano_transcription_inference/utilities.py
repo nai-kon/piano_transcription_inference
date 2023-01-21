@@ -4,6 +4,8 @@ import audioread
 import librosa
 from mido import MidiFile
 
+
+
 from .piano_vad import (note_detection_with_onset_offset_regress, 
     pedal_detection_with_onset_offset_regress)
 from . import config
@@ -503,7 +505,7 @@ def load_audio(path, sr=22050, mono=True, offset=0.0, duration=None,
     backends=[audioread.ffdec.FFmpegAudioFile]):
     """Load audio. Copied from librosa.core.load() except that ffmpeg backend is 
     always used in this function."""
-
+    print(os.getcwd())
     y = []
     with audioread.audio_open(os.path.realpath(path), backends=backends) as input_file:
         sr_native = input_file.samplerate

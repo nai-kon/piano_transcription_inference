@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import time
-import librosa
 from pathlib import Path
 
 import torch
@@ -14,7 +13,7 @@ from . import config
 
 
 class PianoTranscription(object):
-    def __init__(self, model_type='Note_pedal', checkpoint_path=None, 
+    def __init__(self, model_type='Note_pedal', checkpoint_path="", 
         segment_samples=16000*10, device=torch.device('cuda')):
         """Class for transcribing piano solo recording.
 
@@ -24,15 +23,6 @@ class PianoTranscription(object):
           segment_samples: int
           device: 'cuda' | 'cpu'
         """
-        if not checkpoint_path: 
-            checkpoint_path='{}/piano_transcription_inference_data/note_F1=0.9677_pedal_F1=0.9186.pth'.format(str(Path.home()))
-        print('Checkpoint path: {}'.format(checkpoint_path))
-
-        if not os.path.exists(checkpoint_path) or os.path.getsize(checkpoint_path) < 1.6e8:
-            create_folder(os.path.dirname(checkpoint_path))
-            print('Total size: ~165 MB')
-            zenodo_path = 'https://zenodo.org/record/4034264/files/CRNN_note_F1%3D0.9677_pedal_F1%3D0.9186.pth?download=1'
-            os.system('wget -O "{}" "{}"'.format(checkpoint_path, zenodo_path))
 
         print('Using {} for inference.'.format(device))
 
@@ -50,6 +40,7 @@ class PianoTranscription(object):
             classes_num=self.classes_num)
 
         # Load model
+        checkpoint_path=r"model_file\note_F1=0.9677_pedal_F1=0.9186.pth"
         checkpoint = torch.load(checkpoint_path, map_location=device)
         self.model.load_state_dict(checkpoint['model'], strict=False)
 
@@ -61,7 +52,7 @@ class PianoTranscription(object):
         else:
             print('Using CPU.')
 
-    def transcribe(self, audio, midi_path):
+    def transcribe(self, audio, midi_path, pbar):
         """Transcribe an audio recording.
 
         Args:
@@ -86,7 +77,7 @@ class PianoTranscription(object):
         """(N, segment_samples)"""
 
         # Forward
-        output_dict = forward(self.model, segments, batch_size=1)
+        output_dict = forward(self.model, segments, 1, pbar)
         """{'reg_onset_output': (N, segment_frames, classes_num), ...}"""
 
         # Deframe to original length
