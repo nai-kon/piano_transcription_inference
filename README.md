@@ -16,7 +16,7 @@ I added a simple GUI to it.
 ## Usage
 
 1. Click "audio2midi.exe" (It will take a little moment to boot up)
-2. Push "Select mp3 file" then select an audio file to convert
+2. Push "Select mp3 file" then select audio files to convert
 3. Conversion will start (conversion will take more than few minutes. It depends on music length)
 4. Output folder will automatically open after conversion
 
