@@ -42,49 +42,42 @@ if __name__ == '__main__':
     from tkinter import filedialog
     import threading
 
-    label = None
-    pbar = None
-    args = None
-    pbtn = None
-
-    def worker():
-        global args
+    def worker(files):
+        parser = argparse.ArgumentParser(description='')
+        args = parser.parse_args()
         global pbar
         global pbtn
-        inference(args, pbar)
+        global label
+        for i, file in enumerate(files):
+            pbar.set(0)
+            label['text'] = f"{i+1}/{len(files)} processing...{os.path.basename(file)}"
+            args.audio_path = file
+            args.cuda = False
+            savename = os.path.basename(args.audio_path).replace(".mp3", ".mid")
+            args.output_midi_path = f"output/{savename}"
+            inference(args, pbar)
         pbtn["state"] = tk.NORMAL
         import subprocess
         subprocess.Popen(['explorer', os.path.abspath("./output/")], shell=True)
-        global label
         label['text'] = label['text'].replace("processing", "finished")
 
     def filesel():
-        file = filedialog.askopenfilename(filetypes=[("mp3", "*.mp3")])
-        if file is None or file == "":
+        files = filedialog.askopenfilenames(filetypes=[("mp3", "*.mp3")])
+        if len(files) == 0:
             return
-        print(file)
-        global label
-        label['text'] = f"processing...{os.path.basename(file)}"
-
-        parser = argparse.ArgumentParser(description='')
-        global args
-        args = parser.parse_args()
-        args.audio_path = file
-        args.cuda = False
-        savename = os.path.basename(args.audio_path).replace(".mp3", ".mid")
-        args.output_midi_path = f"output/{savename}"
+        print(files)
         global pbar
         pbar.set(0)
         global pbtn
         pbtn["state"] = tk.DISABLED
         global th
-        th = threading.Thread(target=worker)
+        th = threading.Thread(target=worker, args=(files,))
         th.start()
 
     baseGround = tk.Tk()
     baseGround.title("Audio to midi converter")
     baseGround.geometry('600x100')
-    pbtn = tk.Button(baseGround, text="Select mp3 file", command=filesel)
+    pbtn = tk.Button(baseGround, text="Select mp3 files", command=filesel)
     pbtn.pack()
     label = tk.Label(text="")
     label.pack()
