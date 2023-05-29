@@ -42,7 +42,9 @@ if __name__ == '__main__':
     from tkinter import filedialog
     import threading
 
-    def worker(files):
+    DISP_IDENT_OUTDIR = "output: "
+
+    def worker(files, output_dir):
         parser = argparse.ArgumentParser(description='')
         args = parser.parse_args()
         global pbar
@@ -54,14 +56,26 @@ if __name__ == '__main__':
             args.audio_path = file
             args.cuda = False
             savename = os.path.basename(args.audio_path).replace(".mp3", ".mid")
-            args.output_midi_path = f"output/{savename}"
+            args.output_midi_path = f"{output_dir}/{savename}"
             inference(args, pbar)
         pbtn["state"] = tk.NORMAL
         import subprocess
-        subprocess.Popen(['explorer', os.path.abspath("./output/")], shell=True)
+        subprocess.Popen(['explorer', os.path.abspath(output_dir)], shell=True)
         label['text'] = label['text'].replace("processing", "finished")
 
+    def dirsel():
+        global label_output_dir
+        output_dir = filedialog.askdirectory(mustexist=True)
+        if output_dir == "":
+            return
+        label_output_dir["text"] = DISP_IDENT_OUTDIR + output_dir
+
     def filesel():
+        output_dir = label_output_dir["text"].lstrip(DISP_IDENT_OUTDIR)
+        if output_dir == "":
+            tk.messagebox.showwarning(title="output folder error", message="Please select output folder firstly")
+            return
+
         files = filedialog.askopenfilenames(filetypes=[("mp3", "*.mp3")])
         if len(files) == 0:
             return
@@ -71,16 +85,21 @@ if __name__ == '__main__':
         global pbtn
         pbtn["state"] = tk.DISABLED
         global th
-        th = threading.Thread(target=worker, args=(files,))
+        th = threading.Thread(target=worker, args=(files, output_dir))
         th.start()
 
     baseGround = tk.Tk()
     baseGround.title("Audio to midi converter")
-    baseGround.geometry('600x100')
-    pbtn = tk.Button(baseGround, text="Select mp3 files", command=filesel)
+    baseGround.geometry('600x140')
+    pbtn = tk.Button(baseGround, text="Select output folder", command=dirsel)
     pbtn.pack()
+    label_output_dir = tk.Label(text=DISP_IDENT_OUTDIR)
+    label_output_dir.pack()
+    pbtn2 = tk.Button(baseGround, text="Select input mp3 files", command=filesel)
+    pbtn2.pack()
     label = tk.Label(text="")
     label.pack()
     pbar = IntVar()
     ttk.Progressbar(baseGround, maximum=100, mode="determinate", length=550, variable=pbar).pack()
+
     baseGround.mainloop()
